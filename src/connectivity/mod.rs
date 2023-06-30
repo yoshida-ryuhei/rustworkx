@@ -26,7 +26,7 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
-use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable};
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -261,7 +261,12 @@ pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
 pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult<HashSet<usize>> {
-    connectivity::node_connected_component(&graph.graph, node)
+    Ok(
+        connectivity::node_connected_component(&graph.graph, graph.graph.from_index(node))
+            .into_iter()
+            .map(|x| graph.graph.to_index(x))
+            .collect(),
+    )
 }
 
 /// Check if the graph is connected.
@@ -275,7 +280,7 @@ pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn is_connected(graph: &graph::PyGraph) -> PyResult<bool> {
-    connectivity::is_connected(&graph.graph)
+    Ok(connectivity::is_connected(&graph.graph))
 }
 
 /// Find the number of weakly connected components in a directed graph
